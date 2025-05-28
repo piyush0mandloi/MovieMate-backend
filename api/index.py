@@ -10,7 +10,6 @@ from nltk.stem.porter import PorterStemmer
 app = Flask(__name__)
 CORS(app)  # Allow React frontend to access backend
 
-# Initialize necessary objects
 ps = PorterStemmer()
 
 # Load and preprocess data
@@ -67,16 +66,15 @@ movies['crew'] = movies['crew'].apply(lambda x: [i.replace(" ", "") for i in x])
 movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
 new_df = movies[['movie_id', 'title', 'tags']]
 
-new_df['tags'] = new_df['tags'].apply(lambda x: " ".join(x))
-new_df['tags'] = new_df['tags'].apply(lambda x: x.lower())
-new_df['tags'] = new_df['tags'].apply(stem)
+new_df.loc[:, 'tags'] = new_df['tags'].apply(lambda x: " ".join(x))
+new_df.loc[:, 'tags'] = new_df['tags'].apply(lambda x: x.lower())
+new_df.loc[:, 'tags'] = new_df['tags'].apply(stem)
 
-# Vectorization and Similarity
+
 cv = CountVectorizer(max_features=5000, stop_words='english')
 vectors = cv.fit_transform(new_df['tags']).toarray()
 similarity = cosine_similarity(vectors)
 
-# Recommendation function
 def recommend(movie):
     movie = movie.lower()
     matches = new_df[new_df['title'].str.lower() == movie]
@@ -97,7 +95,6 @@ def recommend(movie):
 
 
 
-# 🛤 API Route for Recommendations
 @app.route('/recommend', methods=['POST'])
 def recommend_movies():
     data = request.get_json()
